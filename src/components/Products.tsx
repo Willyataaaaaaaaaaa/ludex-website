@@ -107,7 +107,10 @@ export default function Products() {
     const skipWarning = localStorage.getItem('skipDeleteWarning') === 'true';
     if (skipWarning) {
       supabase.from('products').delete().eq('id', id).then(({ error }) => {
-        if (error) console.error("Error deleting:", error);
+        if (error) {
+          console.error("Error deleting:", error);
+          alert(`حدث خطأ أثناء الحذف: ${error.message}`);
+        }
       });
     } else {
       setItemToDelete(id);
@@ -121,7 +124,10 @@ export default function Products() {
         .delete()
         .eq('id', itemToDelete);
         
-      if (error) console.error("Error deleting:", error);
+      if (error) {
+        console.error("Error deleting:", error);
+        alert(`حدث خطأ أثناء الحذف: ${error.message}`);
+      }
       setItemToDelete(null);
     }
   };

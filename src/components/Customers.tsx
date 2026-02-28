@@ -64,8 +64,8 @@ export default function Customers() {
       setFormData({
         name: customer.name,
         username: customer.username,
-        purchases: [...customer.purchases],
-        notes: customer.notes,
+        purchases: customer.purchases ? [...customer.purchases] : [],
+        notes: customer.notes || '',
       });
     } else {
       setEditingCustomer(null);
@@ -109,12 +109,17 @@ export default function Customers() {
     handleCloseModal();
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string | undefined) => {
+    if (!id) return;
+    
     const skipWarning = localStorage.getItem('skipDeleteWarning') === 'true';
     if (skipWarning) {
       // Delete directly
       supabase.from('customers').delete().eq('id', id).then(({ error }) => {
-        if (error) console.error("Error deleting:", error);
+        if (error) {
+          console.error("Error deleting:", error);
+          alert(`حدث خطأ أثناء الحذف: ${error.message}`);
+        }
       });
     } else {
       setItemToDelete(id);
@@ -122,13 +127,18 @@ export default function Customers() {
   };
 
   const confirmDelete = async () => {
-    if (itemToDelete) {
+    if (itemToDelete !== null && itemToDelete !== undefined) {
       const { error } = await supabase
         .from('customers')
         .delete()
         .eq('id', itemToDelete);
         
-      if (error) console.error("Error deleting:", error);
+      if (error) {
+        console.error("Error deleting:", error);
+        alert(`حدث خطأ أثناء الحذف: ${error.message}`);
+      }
+      setItemToDelete(null);
+    } else {
       setItemToDelete(null);
     }
   };
@@ -160,21 +170,23 @@ export default function Customers() {
   const filteredCustomers = useMemo(() => {
     return customers
       .filter(c =>
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.notes.toLowerCase().includes(searchQuery.toLowerCase())
+        c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.notes?.toLowerCase().includes(searchQuery.toLowerCase())
       )
       .sort((a, b) => {
         // Sort by latest purchase date
-        const aLast = a.purchases.length > 0 ? Math.max(...a.purchases.map(p => new Date(p.date).getTime())) : 0;
-        const bLast = b.purchases.length > 0 ? Math.max(...b.purchases.map(p => new Date(p.date).getTime())) : 0;
+        const aPurchases = a.purchases || [];
+        const bPurchases = b.purchases || [];
+        const aLast = aPurchases.length > 0 ? Math.max(...aPurchases.map(p => new Date(p.date).getTime())) : 0;
+        const bLast = bPurchases.length > 0 ? Math.max(...bPurchases.map(p => new Date(p.date).getTime())) : 0;
         return bLast - aLast;
       });
   }, [customers, searchQuery]);
 
   const stats = useMemo(() => {
     const totalCustomers = customers.length;
-    const totalPurchases = customers.reduce((sum, c) => sum + c.purchases.length, 0);
+    const totalPurchases = customers.reduce((sum, c) => sum + (c.purchases?.length || 0), 0);
     return { totalCustomers, totalPurchases };
   }, [customers]);
 
@@ -265,8 +277,9 @@ export default function Customers() {
                 </tr>
               ) : (
                 filteredCustomers.map((customer) => {
-                  const lastPurchase = customer.purchases.length > 0 
-                    ? [...customer.purchases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+                  const purchases = customer.purchases || [];
+                  const lastPurchase = purchases.length > 0 
+                    ? [...purchases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
                     : null;
 
                   return (
@@ -285,7 +298,7 @@ export default function Customers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {customer.purchases.length} مرات
+                          {purchases.length} مرات
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

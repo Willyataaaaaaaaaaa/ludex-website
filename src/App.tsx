@@ -125,7 +125,10 @@ export default function App() {
     const skipWarning = localStorage.getItem('skipDeleteWarning') === 'true';
     if (skipWarning) {
       supabase.from('subscriptions').delete().eq('id', id).then(({ error }) => {
-        if (error) console.error("Error deleting:", error);
+        if (error) {
+          console.error("Error deleting:", error);
+          alert(`حدث خطأ أثناء الحذف: ${error.message}`);
+        }
       });
     } else {
       setItemToDelete(id);
@@ -139,7 +142,10 @@ export default function App() {
         .delete()
         .eq('id', itemToDelete);
         
-      if (error) console.error("Error deleting:", error);
+      if (error) {
+        console.error("Error deleting:", error);
+        alert(`حدث خطأ أثناء الحذف: ${error.message}`);
+      }
       setItemToDelete(null);
     }
   };
@@ -198,7 +204,7 @@ export default function App() {
           <div className="bg-indigo-600 p-2 rounded-xl">
             <Package className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900">إدارة الاشتراكات</h1>
+          <h1 className="text-xl font-bold text-slate-900">Ludex Store storage</h1>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
@@ -229,7 +235,7 @@ export default function App() {
             <div className="bg-indigo-600 p-1.5 rounded-lg">
               <Package className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-lg font-bold text-slate-900">إدارة الاشتراكات</h1>
+            <h1 className="text-lg font-bold text-slate-900">Ludex Store storage</h1>
           </div>
         </div>
       </header>
